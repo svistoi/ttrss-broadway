@@ -1,0 +1,56 @@
+{
+    "seq": 0,
+    "status": 0,
+    "content": [
+        {
+            "feed_url": "https:\/\/www.cbc.ca\/podcasting\/includes\/wr.xml",
+            "title": "CBC News: World Report",
+            "id": 68,
+            "unread": 16,
+            "has_icon": true,
+            "cat_id": 3,
+            "last_updated": 1589836585,
+            "order_id": 0
+        },
+        {
+            "feed_url": "https:\/\/www.youtube.com\/feeds\/videos.xml?channel_id=UC47eUBNO8KBH_V8AfowOWOw",
+            "title": "Code Sync",
+            "id": 139,
+            "unread": 9,
+            "has_icon": true,
+            "cat_id": 6,
+            "last_updated": 1589837403,
+            "order_id": 0
+        },
+        {
+            "feed_url": "https:\/\/www.youtube.com\/feeds\/videos.xml?channel_id=UC0l2QTnO1P2iph-86HHilMQ",
+            "title": "ElixirConf",
+            "id": 142,
+            "unread": 9,
+            "has_icon": true,
+            "cat_id": 6,
+            "last_updated": 1589838304,
+            "order_id": 0
+        },
+        {
+            "feed_url": "https:\/\/www.youtube.com\/feeds\/videos.xml?channel_id=UCs_tLP3AiwYKwdUHpltJPuA",
+            "title": "GOTO Conferences",
+            "id": 140,
+            "unread": 19,
+            "has_icon": true,
+            "cat_id": 6,
+            "last_updated": 1589838302,
+            "order_id": 0
+        },
+        {
+            "feed_url": "https:\/\/www.youtube.com\/feeds\/videos.xml?channel_id=UCR-DXc1voovS8nhAvccRZhg",
+            "title": "Jeff Geerling",
+            "id": 144,
+            "unread": 10,
+            "has_icon": true,
+            "cat_id": 6,
+            "last_updated": 1589837402,
+            "order_id": 0
+        }
+    ]
+}
