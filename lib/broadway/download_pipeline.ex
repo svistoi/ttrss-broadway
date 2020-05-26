@@ -7,6 +7,7 @@ defmodule Broadway.DownloadPipeline do
 
   def start_link(_opts) do
     Logger.info("Starting #{__MODULE__}")
+
     Broadway.start_link(__MODULE__,
       name: __MODULE__,
       producer: [
@@ -37,10 +38,12 @@ defmodule Broadway.DownloadPipeline do
         end)
         |> Message.put_batcher(:audio_download_transcode)
         |> Message.put_batch_key(download_url)
+
       {:mark_read, _} ->
         message
         |> Message.put_batcher(:mark_read)
-        |> Message.put_batch_key([api_url: data.api_url, sid: data.sid])
+        |> Message.put_batch_key(api_url: data.api_url, sid: data.sid)
+
       _ ->
         message
     end
@@ -59,7 +62,10 @@ defmodule Broadway.DownloadPipeline do
       messages
       |> Enum.each(fn message ->
         out_path =
-          DownloadTranscode.construct_output_file_path(message.data.article, message.data.output_dir)
+          DownloadTranscode.construct_output_file_path(
+            message.data.article,
+            message.data.output_dir
+          )
 
         if not File.exists?(out_path) do
           Logger.info("Copying #{transcode_temp_path} to #{out_path}")
@@ -68,7 +74,13 @@ defmodule Broadway.DownloadPipeline do
         end
 
         Broadway.ArticleHistory.mark_processed(message.data.article_id)
-        :ok = TTRSS.Client.mark_article_read(message.data.article, message.data.api_url, message.data.sid)
+
+        :ok =
+          TTRSS.Client.mark_article_read(
+            message.data.article,
+            message.data.api_url,
+            message.data.sid
+          )
       end)
     catch
       err -> "Error downloading #{inspect(err)}"
@@ -84,6 +96,7 @@ defmodule Broadway.DownloadPipeline do
     Logger.info("Handling batch of marking already downloaded articles #{inspect(batch_info)}")
     api_url = Keyword.fetch!(batch_info.batch_key, :api_url)
     sid = Keyword.fetch!(batch_info.batch_key, :sid)
+
     messages
     |> Enum.map(fn message -> message.data.article end)
     |> TTRSS.Client.mark_article_read(api_url, sid)
@@ -99,7 +112,9 @@ defmodule Broadway.DownloadPipeline do
     [&classify_already_downloaded/1, &classify_for_audio_download/1]
     |> Enum.find_value({:default, nil}, fn lambda ->
       case lambda.(article) do
-        {:error, _} -> false
+        {:error, _} ->
+          false
+
         {classification, rest} ->
           Logger.debug("classified #{inspect(article)} as #{inspect(classification)}")
           {classification, rest}
@@ -116,6 +131,7 @@ defmodule Broadway.DownloadPipeline do
 
   defp classify_for_audio_download(message = %ArticleMessage{}) do
     article = message.article
+
     found =
       Map.get(article, "attachments", [])
       |> Enum.find(false, fn attachment ->

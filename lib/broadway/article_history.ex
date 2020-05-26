@@ -13,7 +13,7 @@ defmodule Broadway.ArticleHistory do
   @impl true
   def init(opts) do
     database_path = Keyword.fetch!(opts, :database_path)
-    :dets.open_file(String.to_atom(database_path), [type: :set])
+    :dets.open_file(String.to_atom(database_path), type: :set)
   end
 
   def is_processed(article_id) do
@@ -33,6 +33,7 @@ defmodule Broadway.ArticleHistory do
     case :dets.lookup(table, article_id) do
       [{^article_id, true}] ->
         {:reply, true, table}
+
       _ ->
         {:reply, false, table}
     end

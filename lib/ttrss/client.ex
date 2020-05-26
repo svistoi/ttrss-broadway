@@ -6,7 +6,8 @@ defmodule TTRSS.Client do
 
   @impl true
   def login(api_url, user, pass) do
-    with {:ok, response} <- make_post_request(%{op: "login", user: user, password: pass}, api_url),
+    with {:ok, response} <-
+           make_post_request(%{op: "login", user: user, password: pass}, api_url),
          {:ok, sid} <- Map.fetch(response, "session_id") do
       {:ok, sid}
     end
@@ -14,7 +15,8 @@ defmodule TTRSS.Client do
 
   @impl true
   def get_all_unread_articles(api_url, sid) do
-    {:ok, unread_headlines} = get_unread_headlines(-4, api_url, sid) # feed id: -4 is special All Articles feed
+    # feed id: -4 is special All Articles feed
+    {:ok, unread_headlines} = get_unread_headlines(-4, api_url, sid)
 
     unread_headlines
     |> Stream.map(fn headline -> Map.get(headline, "id", "") end)
@@ -23,20 +25,23 @@ defmodule TTRSS.Client do
   end
 
   @impl true
-  def mark_article_read(article=%{}, api_url, sid) do
+  def mark_article_read(article = %{}, api_url, sid) do
     mark_article_read([article], api_url, sid)
   end
+
   @impl true
   def mark_article_read(articles, api_url, sid) when is_list(articles) do
     response =
       articles
       |> Enum.map(&Map.get(&1, "id", ""))
       |> Enum.join(",")
-      |> update_article(2, 0, api_url, sid) # field 2 = unread, mode 0 means "false"
+      # field 2 = unread, mode 0 means "false"
+      |> update_article(2, 0, api_url, sid)
 
     case response do
       {:ok, _message} ->
         :ok
+
       err ->
         err
     end
@@ -58,14 +63,17 @@ defmodule TTRSS.Client do
 
   defp make_post_request(body, api_url, headers \\ @http_request_headers) do
     with {:ok, body} <- Jason.encode(body),
-         {:ok, %HTTPoison.Response{status_code: 200, body: body}} <- HTTPoison.post(api_url, body, headers),
+         {:ok, %HTTPoison.Response{status_code: 200, body: body}} <-
+           HTTPoison.post(api_url, body, headers),
          {:ok, %{"status" => 0, "content" => content}} <- Jason.decode(body) do
       {:ok, content}
     else
       {:ok, %HTTPoison.Response{status_code: status_code}} ->
         {:error, "API returned #{status_code}"}
+
       {:ok, %{"status" => 1, "content" => %{"error" => error}}} ->
         {:error, error}
+
       error ->
         error
     end

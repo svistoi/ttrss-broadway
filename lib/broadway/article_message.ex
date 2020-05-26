@@ -1,13 +1,19 @@
 defmodule ArticleMessage do
   @enforce_keys [:article_id, :api_url, :sid, :output_dir, :article]
-  defstruct article_id: nil,    # calculated unique article id
-            api_url: nil,       # tt-rss url where this article came from
-            sid: nil,           # authentication SID against the api_url
-            username: nil,      # username used to login to the API
-            output_dir: nil,    # target where this article is going
-            download_url: nil,  # post-processed article map
-            article: %{}        # raw article from the fee
-
+  # calculated unique article id
+  defstruct article_id: nil,
+            # tt-rss url where this article came from
+            api_url: nil,
+            # authentication SID against the api_url
+            sid: nil,
+            # username used to login to the API
+            username: nil,
+            # target where this article is going
+            output_dir: nil,
+            # post-processed article map
+            download_url: nil,
+            # raw article from the fee
+            article: %{}
 
   def new(article = %{}, api_url, username, output_dir, sid) do
     # Because we could be connecting to multiple endpoints, the unique article
@@ -15,6 +21,7 @@ defmodule ArticleMessage do
     # different article on tt-rss B
     # TODO: see tt-rss article guid definition, looks like an alternative
     article_id = "#{Map.get(article, "id", "no_id")}#{api_url}#{username}"
+
     %ArticleMessage{
       article_id: article_id,
       api_url: api_url,

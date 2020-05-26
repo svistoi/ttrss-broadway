@@ -7,7 +7,8 @@ defmodule ArticleHistoryTest do
     ArticleHistory.mark_processed("id1")
     ArticleHistory.mark_processed("id2")
     ArticleHistory.mark_processed("id3")
-    ArticleHistory.mark_processed("id3") # duplicate
+    # duplicate
+    ArticleHistory.mark_processed("id3")
 
     pid = Process.whereis(ArticleHistory)
     assert pid != nil

@@ -63,6 +63,7 @@ defmodule Util.UnreadArticleFetch do
     Logger.debug(
       "Pushing #{length(unread_articles)} articles to Broadway Producer #{inspect(producer_name)}"
     )
+
     GenStage.cast(producer_name, {:notify, unread_articles})
 
     {:noreply, accounts}
