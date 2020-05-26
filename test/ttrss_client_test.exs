@@ -25,8 +25,13 @@ defmodule TTRSS.ClientTest do
     assert 5 == length(unread_feeds)
   end
 
-  test "mark_article" do
+  test "mark_article single" do
     {:ok, sid} = TTRSS.Client.login(@api_url, @username, @password)
     assert :ok == TTRSS.Client.mark_article_read(%{"id" => 1}, @api_url, sid)
+  end
+
+  test "mark_article list" do
+    {:ok, sid} = TTRSS.Client.login(@api_url, @username, @password)
+    assert :ok == TTRSS.Client.mark_article_read([%{"id" => 1}, %{"id" => 2}], @api_url, sid)
   end
 end

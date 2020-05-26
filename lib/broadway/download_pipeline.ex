@@ -28,7 +28,7 @@ defmodule Broadway.DownloadPipeline do
 
   @impl true
   def handle_message(_, %Message{data: data} = message, _context) do
-    case audio_attachment_filter(data.article) do
+    case classify_article(message.data) do
       {:audio_download_transcode, download_url} ->
         message
         |> Message.update_data(fn data ->
@@ -36,15 +36,18 @@ defmodule Broadway.DownloadPipeline do
         end)
         |> Message.put_batcher(:audio_download_transcode)
         |> Message.put_batch_key(download_url)
-
+      {:mark_read, _} ->
+        message
+        |> Message.put_batcher(:mark_read)
+        |> Message.put_batch_key([api_url: data.api_url, sid: data.sid])
       _ ->
         message
     end
   end
 
   @impl true
-  def handle_batch(:audio_download_transcode, messages, batch_info, context) do
-    Logger.info("#{inspect(batch_info)}, #{inspect(context)}")
+  def handle_batch(:audio_download_transcode, messages, batch_info, _context) do
+    Logger.info("Handling batch of audio download/transcode #{inspect(batch_info)}")
     {:ok, download_temp_path} = Temp.path()
     {:ok, transcode_temp_path} = Temp.path(%{suffix: ".opus"})
 
@@ -75,11 +78,36 @@ defmodule Broadway.DownloadPipeline do
     messages
   end
 
+  def handle_batch(:mark_read, messages, batch_info, _context) do
+    Logger.info("Handling batch of marking already downloaded articles #{inspect(batch_info)}")
+    messages
+    |> Enum.map(fn message -> message.data end)
+    |> TTRSS.Client.mark_article_read(Keyword.get(batch_info, :api_url), Keyword.get(batch_info, :sid))
+  end
+
   def handle_batch(:default, messages, _batch_info, _context) do
     messages
   end
 
-  def audio_attachment_filter(article) do
+  defp classify_article(article = %ArticleMessage{}) do
+    [&classify_already_downloaded/1, &classify_for_audio_download/1]
+    |> Enum.find_value({:default, nil}, fn lambda ->
+      case lambda.(article) do
+        {:error, _} -> false
+        {classification, rest} -> {classification, rest}
+      end
+    end)
+  end
+
+  defp classify_already_downloaded(message = %ArticleMessage{}) do
+    case Broadway.ArticleHistory.is_processed(message.article_id) do
+      true -> {:mark_read, true}
+      false -> {:error, "Haven't seen this article before"}
+    end
+  end
+
+  defp classify_for_audio_download(message = %ArticleMessage{}) do
+    article = message.article
     found =
       Map.get(article, "attachments", [])
       |> Enum.find(false, fn attachment ->

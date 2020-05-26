@@ -24,8 +24,17 @@ defmodule TTRSS.Client do
 
   @impl true
   def mark_article_read(article=%{}, api_url, sid) do
-    # field 2 = unread, mode 0 means "false"
-    case %{sid: sid, op: "updateArticle", article_ids: article["id"], field: 2, mode: 0} |> make_post_request(api_url) do
+    mark_article_read([article], api_url, sid)
+  end
+  @impl true
+  def mark_article_read(articles, api_url, sid) when is_list(articles) do
+    response =
+      articles
+      |> Enum.map(&Map.get(&1, "id", ""))
+      |> Enum.join(",")
+      |> update_article(2, 0, api_url, sid) # field 2 = unread, mode 0 means "false"
+
+    case response do
       {:ok, _message} ->
         :ok
       err ->
@@ -62,13 +71,18 @@ defmodule TTRSS.Client do
     end
   end
 
-  def get_unread_headlines(feed_id, api_url, sid) do
+  defp get_unread_headlines(feed_id, api_url, sid) do
     %{sid: sid, op: "getHeadlines", feed_id: feed_id, view_mode: "unread"}
     |> make_post_request(api_url)
   end
 
-  def get_article(article_id, api_url, sid) do
-    %{sid: sid, op: "getArticle", article_id: article_id}
+  defp get_article(article_ids, api_url, sid) do
+    %{sid: sid, op: "getArticle", article_id: article_ids}
+    |> make_post_request(api_url)
+  end
+
+  defp update_article(article_ids, field, mode, api_url, sid) do
+    %{sid: sid, op: "updateArticle", article_ids: article_ids, field: field, mode: mode}
     |> make_post_request(api_url)
   end
 end
