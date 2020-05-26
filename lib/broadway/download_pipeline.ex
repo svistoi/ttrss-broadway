@@ -21,7 +21,8 @@ defmodule Broadway.DownloadPipeline do
       ],
       batchers: [
         default: [],
-        audio_download_transcode: [concurrency: 1, batch_size: 10, batch_timeout: 1_000]
+        audio_download_transcode: [concurrency: 1, batch_size: 10, batch_timeout: 1_000],
+        mark_read: [concurrency: 2, batch_size: 1_000, batch_timeout: 1_000]
       ]
     )
   end
@@ -66,6 +67,7 @@ defmodule Broadway.DownloadPipeline do
           :ok = File.cp!(transcode_temp_path, out_path)
         end
 
+        Broadway.ArticleHistory.mark_processed(message.data.article_id)
         :ok = TTRSS.Client.mark_article_read(message.data.article, message.data.api_url, message.data.sid)
       end)
     catch
@@ -80,9 +82,13 @@ defmodule Broadway.DownloadPipeline do
 
   def handle_batch(:mark_read, messages, batch_info, _context) do
     Logger.info("Handling batch of marking already downloaded articles #{inspect(batch_info)}")
+    api_url = Keyword.fetch!(batch_info.batch_key, :api_url)
+    sid = Keyword.fetch!(batch_info.batch_key, :sid)
     messages
-    |> Enum.map(fn message -> message.data end)
-    |> TTRSS.Client.mark_article_read(Keyword.get(batch_info, :api_url), Keyword.get(batch_info, :sid))
+    |> Enum.map(fn message -> message.data.article end)
+    |> TTRSS.Client.mark_article_read(api_url, sid)
+
+    messages
   end
 
   def handle_batch(:default, messages, _batch_info, _context) do
@@ -94,7 +100,9 @@ defmodule Broadway.DownloadPipeline do
     |> Enum.find_value({:default, nil}, fn lambda ->
       case lambda.(article) do
         {:error, _} -> false
-        {classification, rest} -> {classification, rest}
+        {classification, rest} ->
+          Logger.debug("classified #{inspect(article)} as #{inspect(classification)}")
+          {classification, rest}
       end
     end)
   end

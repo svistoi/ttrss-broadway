@@ -68,7 +68,7 @@ defmodule Util.UnreadArticleFetch do
     {:noreply, accounts}
   end
 
-  defp authenticate_accounts(accounts = [%{}]) do
+  defp authenticate_accounts(accounts) do
     accounts
     |> Enum.map(&Account.new!(&1))
   end
