@@ -14,7 +14,7 @@ This is a learning project to examine development with Elixir,
 well as working with BEAM.
 
 I manage all my RSS subscriptions - articles, software releases, youtube and
-podcasts using [TT-RSS](https://tt-rss.org/).  
+podcasts using [TT-RSS](https://tt-rss.org/).
 
 In order to make the podcasts available on my phone and multiple
 dekstops/laptops for listening, I download the "un-read" podcasts, and use
@@ -28,7 +28,7 @@ This reduces file size by 2x, with imperceivable (to me) quality reduction.
 
 # Installation
 
-Install elixir 10.3, and erlang 22.x or newer.  Compile 
+Install elixir 10.3, and erlang 22.x or newer.  Compile
 ```
 env MIX_ENV=prod mix release
 ```
@@ -47,13 +47,15 @@ Run
 _build/prod/rel/ttrss_broadway/bin/ttrss_broadway start
 ```
 
-# Appendix 
+# Appendix
 
 ## TODO
 
 - profile
 - examine telemetry feature of broadway
 - live-reload
+- GenServer per account
+- config.exs with more options
 
 ## Issue with HTTPoison and hackney
 
@@ -61,7 +63,7 @@ https://elixirforum.com/t/genstage-unexpected-ssl-closed-message/9688
 
 For now I used httpc for download.
 
-TODO: Look at Mint.HTTP 
+TODO: Look at Mint.HTTP
 
 ## Reference Elixir GenStage/Broadway
 

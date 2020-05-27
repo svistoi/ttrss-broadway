@@ -1,9 +1,12 @@
 defmodule Util.UnreadArticleFetch do
-  # A periodic tasks to get articles from tt-rss and add them to the Broadway
-  # Pipeline
+  @moduledoc """
+  A periodic tasks to get articles from tt-rss and add them to the Broadway
+  Pipeline
+  """
   use GenServer
   require Logger
-
+  alias TTRSS.Account
+  alias Broadway.ArticleMessage
   @defaults [interval: 10_000]
 
   def start_link(opts) do
@@ -22,18 +25,14 @@ defmodule Util.UnreadArticleFetch do
     end
   end
 
-  def trigger_update() do
-    GenServer.cast(__MODULE__, {:update})
-  end
-
   @impl true
   def handle_info(:tick, state) do
-    trigger_update()
+    GenServer.cast(__MODULE__, {:update})
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast({:update}, accounts) do
+  def handle_cast({:update}, accounts = [%Account{}]) do
     Logger.debug("Cron job looking up unread articles")
 
     unread_articles =
@@ -55,25 +54,16 @@ defmodule Util.UnreadArticleFetch do
 
   defp authenticate_accounts(accounts) do
     accounts
-    |> Enum.map(fn account ->
-      api_url = Map.fetch!(account, "api")
-      username = Map.fetch!(account, "username")
-      password = Map.fetch!(account, "password")
-      {:ok, sid} = TTRSS.Client.login(api_url, username, password)
-      Map.put(account, "sid", sid)
-    end)
+    |> Stream.map(&Account.new!(&1))
+    |> Enum.map(&Account.login(&1))
   end
 
   # Fetches article given account and returns them via
-  defp get_unread_article_messages(account) do
-    output_dir = Map.fetch!(account, "output")
-    api_url = Map.fetch!(account, "api")
-    sid = Map.fetch!(account, "sid")
-    Logger.debug("Getting articles for #{api_url} destined for #{output_dir}")
-
-    {:ok, unread_articles} = TTRSS.Client.get_all_unread_articles(api_url, sid)
+  defp get_unread_article_messages(account = %Account{}) do
+    Logger.debug("Getting articles for #{account.api_url} destined for #{account.output_dir}")
+    {:ok, unread_articles} = TTRSS.Client.get_all_unread_articles(account.api_url, account.sid)
 
     unread_articles
-    |> Enum.map(&ArticleMessage.new(&1, api_url, output_dir, sid))
+    |> Enum.map(&ArticleMessage.new(&1, account))
   end
 end

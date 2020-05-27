@@ -9,7 +9,8 @@ defmodule MainApplication do
     accounts = Map.fetch!(config_yaml, "accounts")
 
     children = [
-      Broadway.DownloadPipeline
+      Broadway.DownloadPipeline,
+      Broadway.ArticleHistory
     ]
 
     # During testing startup mock TTRSS server through cowboy/plug

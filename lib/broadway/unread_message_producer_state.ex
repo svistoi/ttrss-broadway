@@ -6,7 +6,6 @@ defmodule Broadway.UnreadMessageProducerState do
             outstanding: %{},
             pending_demand: 0
 
-
   def remove_outstanding(state, article_id) do
     new_outstanding = Map.delete(state.outstanding, article_id)
     %UnreadMessageProducerState{state | outstanding: new_outstanding}
@@ -19,7 +18,11 @@ defmodule Broadway.UnreadMessageProducerState do
       |> Map.drop(Map.keys(state.outstanding))
       |> Map.merge(state.buffer)
 
-    Logger.debug("Incomming #{length(articles)}, old #{map_size(state.buffer)}, outstanding #{map_size(state.outstanding)} final: #{map_size(new_buffer)}")
+    Logger.debug(
+      "Incomming #{length(articles)}, old #{map_size(state.buffer)}, outstanding #{
+        map_size(state.outstanding)
+      } final: #{map_size(new_buffer)}"
+    )
 
     %UnreadMessageProducerState{state | buffer: new_buffer}
   end
@@ -28,7 +31,10 @@ defmodule Broadway.UnreadMessageProducerState do
     %UnreadMessageProducerState{state | pending_demand: state.pending_demand + increase}
   end
 
-  def split_by_outstanding_demand(state = %UnreadMessageProducerState{pending_demand: pending_demand}) when pending_demand == 0 do
+  def split_by_outstanding_demand(
+        state = %UnreadMessageProducerState{pending_demand: pending_demand}
+      )
+      when pending_demand == 0 do
     {[], state}
   end
 
@@ -45,7 +51,7 @@ defmodule Broadway.UnreadMessageProducerState do
     new_buffer = Map.new(remaining_events)
     new_demand = state.pending_demand - map_size(events_to_send)
 
-    #Logger.debug("Split sending out: #{map_size(events_to_send)}, outstanding #{map_size(new_outstanding)} remaining: #{map_size(new_buffer)}")
+    # Logger.debug("Split sending out: #{map_size(events_to_send)}, outstanding #{map_size(new_outstanding)} remaining: #{map_size(new_buffer)}")
 
     {events_to_send,
      %UnreadMessageProducerState{

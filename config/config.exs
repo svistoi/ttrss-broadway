@@ -9,4 +9,4 @@ config :logger,
     [level_lower_than: :info]
   ]
 
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"
