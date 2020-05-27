@@ -1,30 +1,13 @@
 defmodule Util.UnreadArticleFetch do
-  # A periodic tasks to get articles from tt-rss and add them to the Broadway
-  # Pipeline
+  @moduledoc """
+  A periodic tasks to get articles from tt-rss and add them to the Broadway
+  Pipeline
+  """
   use GenServer
   require Logger
+  alias TTRSS.Account
+  alias Broadway.ArticleMessage
   @defaults [interval: 10_000]
-
-  defmodule Account do
-    @enforce_keys [:api_url, :username, :password, :output_dir]
-    defstruct api_url: nil,
-              username: nil,
-              password: nil,
-              output_dir: nil,
-              sid: nil
-
-    def new!(account = %{}) do
-      account = %Account{
-        api_url: Map.fetch!(account, "api"),
-        username: Map.fetch!(account, "username"),
-        password: Map.fetch!(account, "password"),
-        output_dir: Map.fetch!(account, "output")
-      }
-
-      {:ok, sid} = TTRSS.Client.login(account.api_url, account.username, account.password)
-      %Account{account | sid: sid}
-    end
-  end
 
   def start_link(opts) do
     opts = Keyword.merge(@defaults, opts)
@@ -71,7 +54,8 @@ defmodule Util.UnreadArticleFetch do
 
   defp authenticate_accounts(accounts) do
     accounts
-    |> Enum.map(&Account.new!(&1))
+    |> Stream.map(&Account.new!(&1))
+    |> Enum.map(&Account.login(&1))
   end
 
   # Fetches article given account and returns them via
@@ -80,8 +64,6 @@ defmodule Util.UnreadArticleFetch do
     {:ok, unread_articles} = TTRSS.Client.get_all_unread_articles(account.api_url, account.sid)
 
     unread_articles
-    |> Enum.map(
-      &ArticleMessage.new(&1, account.api_url, account.username, account.output_dir, account.sid)
-    )
+    |> Enum.map(&ArticleMessage.new(&1, account))
   end
 end

@@ -4,6 +4,7 @@ defmodule Broadway.DownloadPipeline do
 
   alias Util.DownloadTranscode
   alias Broadway.Message
+  alias Broadway.ArticleMessage
 
   def start_link(_opts) do
     Logger.info("Starting #{__MODULE__}")
@@ -31,18 +32,16 @@ defmodule Broadway.DownloadPipeline do
   @impl true
   def handle_message(_, %Message{data: data} = message, _context) do
     case classify_article(message.data) do
-      {:audio_download_transcode, download_url} ->
+      {:audio_download_transcode, new_data} ->
         message
-        |> Message.update_data(fn data ->
-          %ArticleMessage{data | download_url: download_url}
-        end)
+        |> Message.update_data(fn _ -> new_data end)
         |> Message.put_batcher(:audio_download_transcode)
-        |> Message.put_batch_key(download_url)
+        |> Message.put_batch_key(new_data.download_url)
 
       {:mark_read, _} ->
         message
         |> Message.put_batcher(:mark_read)
-        |> Message.put_batch_key(api_url: data.api_url, sid: data.sid)
+        |> Message.put_batch_key(api_url: data.account.api_url, sid: data.account.sid)
 
       _ ->
         message
@@ -64,7 +63,7 @@ defmodule Broadway.DownloadPipeline do
         out_path =
           DownloadTranscode.construct_output_file_path(
             message.data.article,
-            message.data.output_dir
+            message.data.account.output_dir
           )
 
         if not File.exists?(out_path) do
@@ -73,13 +72,13 @@ defmodule Broadway.DownloadPipeline do
           :ok = File.cp!(transcode_temp_path, out_path)
         end
 
-        Broadway.ArticleHistory.mark_processed(message.data.article_id)
+        Broadway.ArticleHistory.mark_processed(message.data)
 
         :ok =
           TTRSS.Client.mark_article_read(
             message.data.article,
-            message.data.api_url,
-            message.data.sid
+            message.data.account.api_url,
+            message.data.account.sid
           )
       end)
     catch
@@ -123,7 +122,7 @@ defmodule Broadway.DownloadPipeline do
   end
 
   defp classify_already_downloaded(message = %ArticleMessage{}) do
-    case Broadway.ArticleHistory.is_processed(message.article_id) do
+    case Broadway.ArticleHistory.is_processed(message) do
       true -> {:mark_read, true}
       false -> {:error, "Haven't seen this article before"}
     end
@@ -140,7 +139,8 @@ defmodule Broadway.DownloadPipeline do
       end)
 
     if found do
-      {:audio_download_transcode, Map.get(found, "content_url")}
+      message = %ArticleMessage{message | download_url: Map.get(found, "content_url")}
+      {:audio_download_transcode, message}
     else
       {:error, "No audio attachments"}
     end

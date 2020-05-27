@@ -1,6 +1,15 @@
 defmodule Broadway.ArticleHistory do
+  @moduledoc """
+  DETS implementation of article history. Sometimes RSS feeds reset
+  potentially re-download gigabytes of data.
+
+  Mark off the articles downloaded: per account, by their feed title and
+  article title
+  """
+
   use GenServer
   require Logger
+  alias Broadway.ArticleMessage
 
   @defaults [database_path: "article_history.dets"]
 
@@ -16,20 +25,18 @@ defmodule Broadway.ArticleHistory do
     :dets.open_file(String.to_atom(database_path), type: :set)
   end
 
-  def is_processed(article_id) do
-    GenServer.call(__MODULE__, {:is_processed, article_id})
+  def is_processed(message = %ArticleMessage{}) do
+    GenServer.call(__MODULE__, {:is_processed, message})
   end
 
-  def mark_processed(article_id) do
-    GenServer.cast(__MODULE__, {:mark_processed, article_id})
-  end
-
-  def mark_processed_sync(article_id) do
-    GenServer.call(__MODULE__, {:mark_processed, article_id})
+  def mark_processed(message = %ArticleMessage{}) do
+    GenServer.cast(__MODULE__, {:mark_processed, message})
   end
 
   @impl true
-  def handle_call({:is_processed, article_id}, _from, table) do
+  def handle_call({:is_processed, message = %ArticleMessage{}}, _from, table) do
+    article_id = article_message_to_id(message)
+
     case :dets.lookup(table, article_id) do
       [{^article_id, true}] ->
         {:reply, true, table}
@@ -40,8 +47,18 @@ defmodule Broadway.ArticleHistory do
   end
 
   @impl true
-  def handle_cast({:mark_processed, article_id}, table) do
+  def handle_cast({:mark_processed, message = %ArticleMessage{}}, table) do
+    article_id = article_message_to_id(message)
     :ok = :dets.insert(table, {article_id, true})
     {:noreply, table}
+  end
+
+  defp article_message_to_id(message = %ArticleMessage{}) do
+    # Article title, shouldn't use id because on article re-publish the id will
+    # be different
+    title = Map.get(message.article, "title", "")
+    # feed id, not feed_title, I can rename the feed
+    feed_id = Map.get(message.article, "feed_id", "")
+    "#{title}-#{feed_id}-#{message.account.api_url}-#{message.account.username}"
   end
 end
