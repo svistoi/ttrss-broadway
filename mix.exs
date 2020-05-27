@@ -25,7 +25,7 @@ defmodule TtrssBroadway.MixProject do
     [
       {:httpoison, "~> 1.6"},
       # ffmpex uses older version
-      {:jason, "~> 1.1"},
+      {:jason, "~> 1.2", override: true},
       {:temp, "~> 0.4"},
       {:ffmpex, "~> 0.7"},
       {:broadway, "~> 0.6"},

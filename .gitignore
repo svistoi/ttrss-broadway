@@ -25,3 +25,6 @@ ttrss_broadway-*.tar
 .elixir_ls/
 
 *.dets
+
+config.yaml
+config.yml
