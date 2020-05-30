@@ -32,7 +32,7 @@ defmodule Util.UnreadArticleFetch do
   end
 
   @impl true
-  def handle_cast({:update}, accounts = [%Account{}]) do
+  def handle_cast({:update}, accounts) when is_list(accounts) do
     Logger.debug("Cron job looking up unread articles")
 
     unread_articles =
