@@ -52,13 +52,15 @@ defmodule Util.UnreadArticleFetch do
     {:noreply, accounts}
   end
 
-  defp authenticate_accounts(accounts) do
+  @spec authenticate_accounts(List.t) :: List.t
+  defp authenticate_accounts(accounts) when is_list(accounts) do
     accounts
     |> Stream.map(&Account.new!(&1))
     |> Enum.map(&Account.login(&1))
   end
 
   # Fetches article given account and returns them via
+  @spec get_unread_article_messages(Map.t) :: List.t
   defp get_unread_article_messages(account = %Account{}) do
     Logger.debug("Getting articles for #{account.api_url} destined for #{account.output_dir}")
     {:ok, unread_articles} = TTRSS.Client.get_all_unread_articles(account.api_url, account.sid)
