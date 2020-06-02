@@ -20,10 +20,10 @@ defmodule Broadway.ArticleMessage do
     #
     # Article title, shouldn't use id because on article re-publish the id will
     # be different
-    title = Map.get(message.article, "title", "")
+    title = Map.get(article, "title", "")
     # feed id, not feed_title, I can rename the feed
-    feed_id = Map.get(message.article, "feed_id", "")
-    article_id = "#{title}-#{feed_id}-#{message.account.api_url}-#{message.account.username}"
+    feed_id = Map.get(article, "feed_id", "")
+    article_id = "#{title}-#{feed_id}-#{account.api_url}-#{account.username}"
 
     %ArticleMessage{
       article_id: article_id,
