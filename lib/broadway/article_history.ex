@@ -36,6 +36,7 @@ defmodule Broadway.ArticleHistory do
   @impl true
   def handle_call({:is_processed, message = %ArticleMessage{}}, _from, table) do
     article_id = message.article_id
+
     case :dets.lookup(table, article_id) do
       [{^article_id, true}] ->
         {:reply, true, table}

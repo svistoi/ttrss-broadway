@@ -43,16 +43,14 @@ defmodule Util.UnreadArticleFetch do
       Broadway.producer_names(Broadway.DownloadPipeline)
       |> Enum.random()
 
-    Logger.debug(
-      "Pushing #{length(unread_articles)} articles to Broadway Producer #{inspect(producer_name)}"
-    )
+    Logger.debug("Pushing #{length(unread_articles)} articles to Broadway Producer #{inspect(producer_name)}")
 
     GenStage.cast(producer_name, {:notify, unread_articles})
 
     {:noreply, accounts}
   end
 
-  @spec authenticate_accounts(List.t) :: List.t
+  @spec authenticate_accounts(List.t()) :: List.t()
   defp authenticate_accounts(accounts) when is_list(accounts) do
     accounts
     |> Stream.map(&Account.new!(&1))
@@ -60,7 +58,7 @@ defmodule Util.UnreadArticleFetch do
   end
 
   # Fetches article given account and returns them via
-  @spec get_unread_article_messages(Map.t) :: List.t
+  @spec get_unread_article_messages(Map.t()) :: List.t()
   defp get_unread_article_messages(account = %Account{}) do
     Logger.debug("Getting articles for #{account.api_url} destined for #{account.output_dir}")
     {:ok, unread_articles} = TTRSS.Client.get_all_unread_articles(account.api_url, account.sid)

@@ -19,9 +19,9 @@ defmodule Broadway.UnreadMessageProducerState do
       |> Map.merge(state.buffer)
 
     Logger.debug(
-      "Incomming #{length(articles)}, old #{map_size(state.buffer)}, outstanding #{
-        map_size(state.outstanding)
-      } final: #{map_size(new_buffer)}"
+      "Incomming #{length(articles)}, old #{map_size(state.buffer)}, outstanding #{map_size(state.outstanding)} final: #{
+        map_size(new_buffer)
+      }"
     )
 
     %UnreadMessageProducerState{state | buffer: new_buffer}
@@ -31,9 +31,7 @@ defmodule Broadway.UnreadMessageProducerState do
     %UnreadMessageProducerState{state | pending_demand: state.pending_demand + increase}
   end
 
-  def split_by_outstanding_demand(
-        state = %UnreadMessageProducerState{pending_demand: pending_demand}
-      )
+  def split_by_outstanding_demand(state = %UnreadMessageProducerState{pending_demand: pending_demand})
       when pending_demand == 0 do
     {[], state}
   end
