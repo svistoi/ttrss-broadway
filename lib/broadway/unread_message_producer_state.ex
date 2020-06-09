@@ -1,4 +1,8 @@
 defmodule Broadway.UnreadMessageProducerState do
+  @moduledoc """
+  Memory storage of un-dispatched, as well as dispatched messages as a state
+  of the producer.
+  """
   require Logger
   alias __MODULE__
 

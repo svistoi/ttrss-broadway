@@ -1,4 +1,7 @@
 defmodule TTRSS.Client do
+  @moduledoc """
+  Implementation of TT-RSS API client
+  """
   require Logger
   @behaviour TTRSS.ClientBehavior
 

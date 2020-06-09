@@ -1,4 +1,7 @@
 defmodule Broadway.ArticleMessage do
+  @moduledoc """
+  Message struct passed around by this Broadway instance
+  """
   alias __MODULE__
 
   @enforce_keys [:article_id, :account]

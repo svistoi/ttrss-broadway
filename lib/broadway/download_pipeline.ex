@@ -1,4 +1,14 @@
 defmodule Broadway.DownloadPipeline do
+  @moduledoc """
+  Broadway consumer pipeline. The message handler portion only filters
+  messages (ones with no attachment for exampe), batches them and passes onto
+  the batch processing stage.
+
+  Batch processing stage downloads and transcodes the messages.
+
+  This is organized this way because we can download same podcast just once
+  for multiple accounts.
+  """
   use Broadway
   require Logger
 

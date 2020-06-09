@@ -1,4 +1,7 @@
 defmodule Util.DownloadTranscode do
+  @moduledoc """
+  Utilities for downloading and transcoding using ffmpeg
+  """
   import FFmpex
   use FFmpex.Options
   require Logger

@@ -32,7 +32,8 @@ defmodule TtrssBroadway.MixProject do
       {:yaml_elixir, "~> 2.4"},
       {:telemetry, "~> 0.4"},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      {:plug_cowboy, "~> 2.0", only: :test}
+      {:plug_cowboy, "~> 2.0", only: :test},
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 

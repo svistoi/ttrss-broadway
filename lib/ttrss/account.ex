@@ -1,4 +1,7 @@
 defmodule TTRSS.Account do
+  @moduledoc """
+  Account data structure for TT-RSS endpoint
+  """
   alias __MODULE__
   alias TTRSS.Client
 
