@@ -1,4 +1,9 @@
 defmodule Broadway.UnreadMessageProducer do
+  @moduledoc """
+  Broadway prdocuer that stores messages in memory until a consumer asks for
+  them
+  """
+
   use GenStage
   require Logger
   alias Broadway.UnreadMessageProducerState

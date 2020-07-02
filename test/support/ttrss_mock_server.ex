@@ -1,4 +1,8 @@
 defmodule TTRSS.MockServer do
+  @moduledoc """
+  A fake instance of TT-RSS API endpoint with pre-recorded messages as
+  replies, used for unit tests.
+  """
   use Plug.Router
 
   @sid "12345"

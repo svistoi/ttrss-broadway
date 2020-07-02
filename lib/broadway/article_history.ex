@@ -35,7 +35,7 @@ defmodule Broadway.ArticleHistory do
 
   @impl true
   def handle_call({:is_processed, message = %ArticleMessage{}}, _from, table) do
-    article_id = article_message_to_id(message)
+    article_id = message.article_id
 
     case :dets.lookup(table, article_id) do
       [{^article_id, true}] ->
@@ -48,17 +48,7 @@ defmodule Broadway.ArticleHistory do
 
   @impl true
   def handle_cast({:mark_processed, message = %ArticleMessage{}}, table) do
-    article_id = article_message_to_id(message)
-    :ok = :dets.insert(table, {article_id, true})
+    :ok = :dets.insert(table, {message.article_id, true})
     {:noreply, table}
-  end
-
-  defp article_message_to_id(message = %ArticleMessage{}) do
-    # Article title, shouldn't use id because on article re-publish the id will
-    # be different
-    title = Map.get(message.article, "title", "")
-    # feed id, not feed_title, I can rename the feed
-    feed_id = Map.get(message.article, "feed_id", "")
-    "#{title}-#{feed_id}-#{message.account.api_url}-#{message.account.username}"
   end
 end

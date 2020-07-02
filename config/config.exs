@@ -2,6 +2,9 @@ use Mix.Config
 
 config :ssl, protocol_version: :"tlsv1.2"
 
+config :ttrss_broadway,
+  audio_download_transcode_concurrency: 2
+
 config :logger,
   backends: [:console],
   level: :info,

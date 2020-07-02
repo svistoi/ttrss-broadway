@@ -66,13 +66,11 @@ defmodule DownloadTest do
   end
 
   test "sanitize_string_for_filename" do
-    sanitized =
-      DownloadTranscode.sanitize_string_for_filename("CBC News: World Report for 2020/03/17")
+    sanitized = DownloadTranscode.sanitize_string_for_filename("CBC News: World Report for 2020/03/17")
 
     assert sanitized == "CBC_News_World_Report_for_20200317"
 
-    sanitized =
-      DownloadTranscode.title_to_filename("CBC News: World Report for 2020/03/17", ~D[2011-10-11])
+    sanitized = DownloadTranscode.title_to_filename("CBC News: World Report for 2020/03/17", ~D[2011-10-11])
 
     assert sanitized == "20111011_CBC_News_World_Report_for_20200317.opus"
   end

@@ -1,4 +1,14 @@
 defmodule Broadway.DownloadPipeline do
+  @moduledoc """
+  Broadway consumer pipeline. The message handler portion only filters
+  messages (ones with no attachment for exampe), batches them and passes onto
+  the batch processing stage.
+
+  Batch processing stage downloads and transcodes the messages.
+
+  This is organized this way because we can download same podcast just once
+  for multiple accounts.
+  """
   use Broadway
   require Logger
 
@@ -7,7 +17,10 @@ defmodule Broadway.DownloadPipeline do
   alias Broadway.ArticleMessage
 
   def start_link(_opts) do
-    Logger.info("Starting #{__MODULE__}")
+    audio_download_transcode_concurrency =
+      Application.get_env(:ttrss_broadway, :audio_download_transcode_concurrency, 2)
+
+    Logger.info("Starting #{__MODULE__}.  Downloaders: #{audio_download_transcode_concurrency}")
 
     Broadway.start_link(__MODULE__,
       name: __MODULE__,
@@ -23,8 +36,12 @@ defmodule Broadway.DownloadPipeline do
       ],
       batchers: [
         default: [],
-        audio_download_transcode: [concurrency: 1, batch_size: 10, batch_timeout: 1_000],
-        mark_read: [concurrency: 2, batch_size: 1_000, batch_timeout: 1_000]
+        audio_download_transcode: [
+          concurrency: audio_download_transcode_concurrency,
+          batch_size: 10,
+          batch_timeout: 1_000
+        ],
+        mark_read: [concurrency: 1, batch_size: 1_000, batch_timeout: 1_000]
       ]
     )
   end
