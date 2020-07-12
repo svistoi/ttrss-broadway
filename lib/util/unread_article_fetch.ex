@@ -7,30 +7,36 @@ defmodule Util.UnreadArticleFetch do
   alias TTRSS.Account
   alias Broadway.ArticleMessage
 
-  @defaults [interval: 10_000]
+  def child_spec(init_args) do
+    Supervisor.child_spec({__MODULE__.Sup, init_args}, id: __MODULE__)
+  end
 
-  def child_spec(opts) do
-    IO.puts(inspect(opts))
-    opts = Keyword.merge(@defaults, opts)
+  defmodule Sup do
+    @moduledoc """
+    Supervisor for ArticleFetcher workers
+    """
+    use Supervisor
 
-    children =
-      with {:ok, accounts} <- Keyword.fetch(opts, :accounts),
-           {:ok, interval} <- Keyword.fetch(opts, :interval) do
-        IO.puts(inspect(accounts))
+    @impl true
+    def start_link(init_args) do
+      Supervisor.start_link(__MODULE__, init_args, name: __MODULE__)
+    end
 
+    @impl true
+    def init(interval: interval, accounts: accounts) do
+      children =
         accounts
-        |> Stream.map(&Account.new!(&1))
-        |> Enum.map(fn account ->
-          IO.puts(inspect(interval))
-          {__MODULE__.ArticleFetcher, [interval: interval, account: account]}
-        end)
-      end
+        |> Stream.with_index()
+        |> Enum.map(fn {account, index} ->
+          id = "#{Util.UnreadArticleFetch.ArticleFetcher}_#{index}"
 
-    # IO.puts(inspect(children))
-    Supervisor.Spec.supervisor(
-      Supervisor,
-      [children, [strategy: :one_for_one, name: __MODULE__]]
-    )
+          Supervisor.child_spec({Util.UnreadArticleFetch.ArticleFetcher, [interval: interval, account: account]},
+            id: id
+          )
+        end)
+
+      Supervisor.init(children, strategy: :one_for_one, max_restarts: 1_000, max_seconds: 300)
+    end
   end
 
   defmodule ArticleFetcher do
@@ -39,26 +45,26 @@ defmodule Util.UnreadArticleFetch do
     """
     use GenServer
 
-    def start_link(opts) do
-      GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+    def start_link(init_args) do
+      GenServer.start_link(__MODULE__, init_args)
     end
 
     @impl true
     def init(interval: interval, account: %Account{} = account) do
-      Logger.info("Starting #{__MODULE__} account=#{account.username}")
+      Logger.info("Starting #{__MODULE__} account=#{account.username} timer=#{interval}")
       authenticated_account = Account.login(account)
       :timer.send_interval(interval, :tick)
       {:ok, authenticated_account}
     end
 
     @impl true
-    def handle_info(:tick, state) do
-      GenServer.cast(__MODULE__, {:update})
-      {:noreply, state}
+    def handle_info(:tick, account) do
+      GenServer.cast(self(), {:update})
+      {:noreply, account}
     end
 
     @impl true
-    def handle_cast({:update}, account) do
+    def handle_cast({:update}, %Account{} = account) do
       Logger.debug("Cron job looking up unread articles")
 
       unread_articles = get_unread_article_messages(account)
@@ -77,8 +83,7 @@ defmodule Util.UnreadArticleFetch do
     end
 
     # Fetches article given account and returns them via
-    @spec get_unread_article_messages(Map.t()) :: List.t()
-    defp get_unread_article_messages(account = %Account{}) do
+    defp get_unread_article_messages(%Account{} = account) do
       Logger.debug("Getting articles url=#{account.api_url} account=#{account.username}")
       {:ok, unread_articles} = TTRSS.Client.get_all_unread_articles(account.api_url, account.sid)
 

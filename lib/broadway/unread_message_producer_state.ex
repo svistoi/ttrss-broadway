@@ -22,11 +22,10 @@ defmodule Broadway.UnreadMessageProducerState do
       |> Map.drop(Map.keys(state.outstanding))
       |> Map.merge(state.buffer)
 
-    Logger.debug(
-      "Incomming #{length(articles)}, old #{map_size(state.buffer)}, outstanding #{map_size(state.outstanding)} final: #{
-        map_size(new_buffer)
-      }"
-    )
+    Logger.debug("Producer current_not_dispatched=#{map_size(state.buffer)}
+        current_dispatched=#{map_size(state.outstanding)}
+        incomming_new=#{length(articles)},
+        new_unique_articles=#{map_size(new_buffer)}")
 
     %UnreadMessageProducerState{state | buffer: new_buffer}
   end
