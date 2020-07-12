@@ -28,7 +28,7 @@ defmodule TTRSS.Client do
   end
 
   @impl true
-  def mark_article_read(article = %{}, api_url, sid) do
+  def mark_article_read(%{} = article, api_url, sid) do
     mark_article_read([article], api_url, sid)
   end
 

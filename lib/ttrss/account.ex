@@ -12,7 +12,7 @@ defmodule TTRSS.Account do
             output_dir: nil,
             sid: nil
 
-  def new!(account = %{}) do
+  def new!(%{} = account) do
     new(
       Map.fetch!(account, "api"),
       Map.fetch!(account, "username"),

@@ -14,7 +14,7 @@ defmodule Broadway.ArticleMessage do
             # raw ttrss article
             article: %{}
 
-  def new(article = %{}, account = %TTRSS.Account{}) do
+  def new(%{} = article, %TTRSS.Account{} = account) do
     # Because we could be connecting to multiple endpoints, the unique article
     # ID needs to be in context of api endpoint; ID 1 on tt-rss A, may be a
     # different article on tt-rss B

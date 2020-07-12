@@ -21,27 +21,27 @@ defmodule Broadway.UnreadMessageProducer do
   end
 
   def handle_cast(
-        {:remove_outstanding, message = %Broadway.Message{}},
-        state = %UnreadMessageProducerState{}
+        {:remove_outstanding, %Broadway.Message{} = message},
+        %UnreadMessageProducerState{} = state
       ) do
     state
     |> UnreadMessageProducerState.remove_outstanding(message.data.article_id)
     |> dispatch_events()
   end
 
-  def handle_cast({:notify, articles}, state = %UnreadMessageProducerState{}) do
+  def handle_cast({:notify, articles}, %UnreadMessageProducerState{} = state) do
     state
     |> UnreadMessageProducerState.add_articles(articles)
     |> dispatch_events()
   end
 
-  def handle_demand(incoming_demand, state = %UnreadMessageProducerState{}) do
+  def handle_demand(incoming_demand, %UnreadMessageProducerState{} = state) do
     state
     |> UnreadMessageProducerState.add_pending_demand(incoming_demand)
     |> dispatch_events()
   end
 
-  defp dispatch_events(state = %UnreadMessageProducerState{}) do
+  defp dispatch_events(%UnreadMessageProducerState{} = state) do
     {events_to_send, new_state} =
       state
       |> UnreadMessageProducerState.split_by_demand()
