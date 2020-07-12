@@ -23,16 +23,16 @@ defmodule TtrssBroadway.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 1.6"},
+      {:httpoison, "~> 1.7.0"},
       # ffmpex uses older version
       {:jason, "~> 1.2", override: true},
       {:temp, "~> 0.4"},
-      {:ffmpex, "~> 0.7"},
+      {:ffmpex, "~> 0.7.3"},
       {:broadway, "~> 0.6"},
       {:yaml_elixir, "~> 2.4"},
-      {:telemetry, "~> 0.4"},
+      {:telemetry, "~> 0.4.2"},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      {:plug_cowboy, "~> 2.0", only: :test},
+      {:plug_cowboy, "~> 2.3.0", only: :test},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
