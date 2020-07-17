@@ -1,3 +1,4 @@
+---
 # Elixir CircleCI 2.0 configuration file
 version: 2
 jobs:
@@ -11,3 +12,9 @@ jobs:
       - run: mix deps.get
       - run: mix credo -C ci
       - run: mix test
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - test
