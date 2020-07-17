@@ -2,11 +2,18 @@ defmodule MainApplication do
   @moduledoc false
   require Logger
   use Application
+  alias TTRSS.Account
+
+  @default_interval 30_000
 
   def start(_type, args) do
     config_yaml = load_configuration("config.yaml")
     Logger.debug("Using configuration: #{inspect(config_yaml)}")
-    accounts = Map.fetch!(config_yaml, "accounts")
+
+    accounts =
+      config_yaml
+      |> Map.fetch!("accounts")
+      |> Enum.map(&Account.new!(&1))
 
     children = [
       Broadway.DownloadPipeline,
@@ -22,7 +29,7 @@ defmodule MainApplication do
           [{Plug.Cowboy, scheme: :http, plug: TTRSS.MockServer, options: [port: 8081]}]
 
         [_] ->
-          [{Util.UnreadArticleFetch, [accounts: accounts]}]
+          [{Util.UnreadArticleFetch, [interval: @default_interval, accounts: accounts]}]
       end
 
     children = children ++ additional_children

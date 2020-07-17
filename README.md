@@ -54,7 +54,6 @@ _build/prod/rel/ttrss_broadway/bin/ttrss_broadway start
 - profile
 - examine telemetry feature of broadway
 - live-reload
-- GenServer per account
 - config.exs with more options
 
 ## Issue with HTTPoison and hackney

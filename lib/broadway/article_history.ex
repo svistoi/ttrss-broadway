@@ -25,16 +25,16 @@ defmodule Broadway.ArticleHistory do
     :dets.open_file(String.to_atom(database_path), type: :set)
   end
 
-  def is_processed(message = %ArticleMessage{}) do
+  def is_processed(%ArticleMessage{} = message) do
     GenServer.call(__MODULE__, {:is_processed, message})
   end
 
-  def mark_processed(message = %ArticleMessage{}) do
+  def mark_processed(%ArticleMessage{} = message) do
     GenServer.cast(__MODULE__, {:mark_processed, message})
   end
 
   @impl true
-  def handle_call({:is_processed, message = %ArticleMessage{}}, _from, table) do
+  def handle_call({:is_processed, %ArticleMessage{} = message}, _from, table) do
     article_id = message.article_id
 
     case :dets.lookup(table, article_id) do
@@ -47,7 +47,7 @@ defmodule Broadway.ArticleHistory do
   end
 
   @impl true
-  def handle_cast({:mark_processed, message = %ArticleMessage{}}, table) do
+  def handle_cast({:mark_processed, %ArticleMessage{} = message}, table) do
     :ok = :dets.insert(table, {message.article_id, true})
     {:noreply, table}
   end

@@ -124,7 +124,7 @@ defmodule Broadway.DownloadPipeline do
     messages
   end
 
-  defp classify_article(article = %ArticleMessage{}) do
+  defp classify_article(%ArticleMessage{} = article) do
     [&classify_already_downloaded/1, &classify_for_audio_download/1]
     |> Enum.find_value({:default, nil}, fn lambda ->
       case lambda.(article) do
@@ -138,14 +138,14 @@ defmodule Broadway.DownloadPipeline do
     end)
   end
 
-  defp classify_already_downloaded(message = %ArticleMessage{}) do
+  defp classify_already_downloaded(%ArticleMessage{} = message) do
     case Broadway.ArticleHistory.is_processed(message) do
       true -> {:mark_read, true}
       false -> {:error, "Haven't seen this article before"}
     end
   end
 
-  defp classify_for_audio_download(message = %ArticleMessage{}) do
+  defp classify_for_audio_download(%ArticleMessage{} = message) do
     article = message.article
 
     found =

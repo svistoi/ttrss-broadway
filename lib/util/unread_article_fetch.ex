@@ -3,67 +3,92 @@ defmodule Util.UnreadArticleFetch do
   A periodic tasks to get articles from tt-rss and add them to the Broadway
   Pipeline
   """
-  use GenServer
   require Logger
   alias TTRSS.Account
   alias Broadway.ArticleMessage
-  @defaults [interval: 10_000]
 
-  def start_link(opts) do
-    opts = Keyword.merge(@defaults, opts)
-    Logger.info("Starting #{__MODULE__}")
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  def child_spec(init_args) do
+    Supervisor.child_spec({__MODULE__.Sup, init_args}, id: __MODULE__)
   end
 
-  @impl true
-  def init(opts) do
-    with {:ok, accounts} <- Keyword.fetch(opts, :accounts),
-         {:ok, interval} <- Keyword.fetch(opts, :interval) do
-      authenticated_accounts = authenticate_accounts(accounts)
-      :timer.send_interval(interval, :tick)
-      {:ok, authenticated_accounts}
+  defmodule Sup do
+    @moduledoc """
+    Supervisor for ArticleFetcher workers
+    """
+    use Supervisor
+
+    @impl true
+    def start_link(init_args) do
+      Supervisor.start_link(__MODULE__, init_args, name: __MODULE__)
+    end
+
+    @impl true
+    def init(interval: interval, accounts: accounts) do
+      children =
+        accounts
+        |> Stream.with_index()
+        |> Enum.map(fn {account, index} ->
+          id = "#{Util.UnreadArticleFetch.ArticleFetcher}_#{index}"
+
+          Supervisor.child_spec({Util.UnreadArticleFetch.ArticleFetcher, [interval: interval, account: account]},
+            id: id
+          )
+        end)
+
+      Supervisor.init(children, strategy: :one_for_one, max_restarts: 1_000, max_seconds: 300)
     end
   end
 
-  @impl true
-  def handle_info(:tick, state) do
-    GenServer.cast(__MODULE__, {:update})
-    {:noreply, state}
-  end
+  defmodule ArticleFetcher do
+    @moduledoc """
+    Process that fetches the articles
+    """
+    use GenServer
 
-  @impl true
-  def handle_cast({:update}, accounts) when is_list(accounts) do
-    Logger.debug("Cron job looking up unread articles")
+    def start_link(init_args) do
+      GenServer.start_link(__MODULE__, init_args)
+    end
 
-    unread_articles =
-      accounts
-      |> Enum.flat_map(&get_unread_article_messages(&1))
+    @impl true
+    def init(interval: interval, account: %Account{} = account) do
+      Logger.info("Starting #{__MODULE__} account=#{account.username} timer=#{interval}")
+      authenticated_account = Account.login(account)
+      :timer.send_interval(interval, :tick)
+      {:ok, authenticated_account}
+    end
 
-    producer_name =
-      Broadway.producer_names(Broadway.DownloadPipeline)
-      |> Enum.random()
+    @impl true
+    def handle_info(:tick, account) do
+      GenServer.cast(self(), {:update})
+      {:noreply, account}
+    end
 
-    Logger.debug("Pushing #{length(unread_articles)} articles to Broadway Producer #{inspect(producer_name)}")
+    @impl true
+    def handle_cast({:update}, %Account{} = account) do
+      Logger.debug("Cron job looking up unread articles")
 
-    GenStage.cast(producer_name, {:notify, unread_articles})
+      unread_articles = get_unread_article_messages(account)
 
-    {:noreply, accounts}
-  end
+      producer_name =
+        Broadway.producer_names(Broadway.DownloadPipeline)
+        |> Enum.random()
 
-  @spec authenticate_accounts(List.t()) :: List.t()
-  defp authenticate_accounts(accounts) when is_list(accounts) do
-    accounts
-    |> Stream.map(&Account.new!(&1))
-    |> Enum.map(&Account.login(&1))
-  end
+      Logger.info(
+        "Pushing articles=#{length(unread_articles)} account=#{account.username} producer=#{inspect(producer_name)}"
+      )
 
-  # Fetches article given account and returns them via
-  @spec get_unread_article_messages(Map.t()) :: List.t()
-  defp get_unread_article_messages(account = %Account{}) do
-    Logger.debug("Getting articles for #{account.api_url} destined for #{account.output_dir}")
-    {:ok, unread_articles} = TTRSS.Client.get_all_unread_articles(account.api_url, account.sid)
+      GenStage.cast(producer_name, {:notify, unread_articles})
 
-    unread_articles
-    |> Enum.map(&ArticleMessage.new(&1, account))
+      {:noreply, account}
+    end
+
+    # Fetches article given account and returns them via
+    defp get_unread_article_messages(%Account{} = account) do
+      Logger.debug("Getting articles url=#{account.api_url} account=#{account.username}")
+      {:ok, unread_articles} = TTRSS.Client.get_all_unread_articles(account.api_url, account.sid)
+
+      unread_articles
+      |> Enum.map(&ArticleMessage.new(&1, account))
+    end
   end
 end
