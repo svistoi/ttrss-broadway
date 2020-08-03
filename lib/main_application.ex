@@ -4,7 +4,7 @@ defmodule MainApplication do
   use Application
   alias TTRSS.Account
 
-  @default_interval 30_000
+  @default_interval 60_000
 
   def start(_type, args) do
     config_yaml = load_configuration("config.yaml")

@@ -4,7 +4,7 @@ defmodule TtrssBroadway.MixProject do
   def project do
     [
       app: :ttrss_broadway,
-      version: "0.3.0",
+      version: "0.3.1",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -26,10 +26,10 @@ defmodule TtrssBroadway.MixProject do
       {:httpoison, "~> 1.7.0"},
       # ffmpex uses older version
       {:jason, "~> 1.2", override: true},
-      {:temp, "~> 0.4"},
+      {:temp, "~> 0.4.7"},
       {:ffmpex, "~> 0.7.3"},
-      {:broadway, "~> 0.6"},
-      {:yaml_elixir, "~> 2.4"},
+      {:broadway, "~> 0.6.1"},
+      {:yaml_elixir, "~> 2.5.0"},
       {:telemetry, "~> 0.4.2"},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:plug_cowboy, "~> 2.3.0", only: :test},

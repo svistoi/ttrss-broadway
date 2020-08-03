@@ -22,7 +22,7 @@ defmodule TTRSS.Client do
     {:ok, unread_headlines} = get_unread_headlines(-4, api_url, sid)
 
     unread_headlines
-    |> Stream.map(fn headline -> Map.get(headline, "id", "") end)
+    |> Stream.map(&Map.get(&1, "id", ""))
     |> Enum.join(",")
     |> get_article(api_url, sid)
   end
@@ -36,7 +36,7 @@ defmodule TTRSS.Client do
   def mark_article_read(articles, api_url, sid) when is_list(articles) do
     response =
       articles
-      |> Enum.map(&Map.get(&1, "id", ""))
+      |> Stream.map(&Map.get(&1, "id", ""))
       |> Enum.join(",")
       # field 2 = unread, mode 0 means "false"
       |> update_article(2, 0, api_url, sid)
@@ -64,7 +64,7 @@ defmodule TTRSS.Client do
     |> make_post_request(api_url)
   end
 
-  defp make_post_request(body, api_url, headers \\ @http_request_headers) do
+  def make_post_request(body, api_url, headers \\ @http_request_headers) do
     with {:ok, body} <- Jason.encode(body),
          {:ok, %HTTPoison.Response{status_code: 200, body: body}} <-
            HTTPoison.post(api_url, body, headers),
@@ -87,10 +87,14 @@ defmodule TTRSS.Client do
     |> make_post_request(api_url)
   end
 
+  defp get_article("", _api_url, _sid), do: {:ok, []}
+
   defp get_article(article_ids, api_url, sid) do
     %{sid: sid, op: "getArticle", article_id: article_ids}
     |> make_post_request(api_url)
   end
+
+  defp update_article("", _field, _mode, _api_url, _sid), do: {:ok, []}
 
   defp update_article(article_ids, field, mode, api_url, sid) do
     %{sid: sid, op: "updateArticle", article_ids: article_ids, field: field, mode: mode}
