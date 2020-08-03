@@ -87,14 +87,14 @@ defmodule TTRSS.Client do
     |> make_post_request(api_url)
   end
 
-  defp get_article("", _api_url, _sid), do: []
+  defp get_article("", _api_url, _sid), do: {:ok, []}
 
   defp get_article(article_ids, api_url, sid) do
     %{sid: sid, op: "getArticle", article_id: article_ids}
     |> make_post_request(api_url)
   end
 
-  defp update_article("", _field, _mode, _api_url, _sid), do: []
+  defp update_article("", _field, _mode, _api_url, _sid), do: {:ok, []}
 
   defp update_article(article_ids, field, mode, api_url, sid) do
     %{sid: sid, op: "updateArticle", article_ids: article_ids, field: field, mode: mode}
