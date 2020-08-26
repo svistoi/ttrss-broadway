@@ -52,9 +52,8 @@ defmodule Util.UnreadArticleFetch do
     @impl true
     def init(interval: interval, account: %Account{} = account) do
       Logger.info("Starting #{__MODULE__} account=#{account.username} timer=#{interval}")
-      authenticated_account = Account.login(account)
       :timer.send_interval(interval, :tick)
-      {:ok, authenticated_account}
+      {:ok, account}
     end
 
     @impl true
@@ -66,6 +65,13 @@ defmodule Util.UnreadArticleFetch do
     @impl true
     def handle_cast({:update}, %Account{} = account) do
       Logger.debug("Cron job looking up unread articles")
+
+      account =
+        if is_nil(account.sid) do
+          authenticated_account = Account.login(account)
+        else
+          account
+        end
 
       unread_articles = get_unread_article_messages(account)
 

@@ -4,7 +4,7 @@ defmodule TtrssBroadway.MixProject do
   def project do
     [
       app: :ttrss_broadway,
-      version: "0.3.1",
+      version: "0.3.2",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -28,7 +28,7 @@ defmodule TtrssBroadway.MixProject do
       {:jason, "~> 1.2", override: true},
       {:temp, "~> 0.4.7"},
       {:ffmpex, "~> 0.7.3"},
-      {:broadway, "~> 0.6.1"},
+      {:broadway, "~> 0.6.2"},
       {:yaml_elixir, "~> 2.5.0"},
       {:telemetry, "~> 0.4.2"},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
