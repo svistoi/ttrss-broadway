@@ -4,8 +4,8 @@ defmodule TtrssBroadway.MixProject do
   def project do
     [
       app: :ttrss_broadway,
-      version: "0.3.2",
-      elixir: "~> 1.10",
+      version: "0.4.0",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env())
@@ -32,8 +32,8 @@ defmodule TtrssBroadway.MixProject do
       {:yaml_elixir, "~> 2.5.0"},
       {:telemetry, "~> 0.4.2"},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      {:plug_cowboy, "~> 2.3.0", only: :test},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
+      {:mox, "~> 1.0", only: :test},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
   end
 

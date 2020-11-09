@@ -68,7 +68,7 @@ defmodule Util.UnreadArticleFetch do
 
       account =
         if is_nil(account.sid) do
-          authenticated_account = Account.login(account)
+          Account.login(account)
         else
           account
         end

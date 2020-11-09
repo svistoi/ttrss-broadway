@@ -17,22 +17,10 @@ defmodule MainApplication do
 
     children = [
       Broadway.DownloadPipeline,
-      Broadway.ArticleHistory
+      Broadway.ArticleHistory,
+      {Util.UnreadArticleFetch, [interval: @default_interval, accounts: accounts]}
     ]
 
-    # During testing startup mock TTRSS server through cowboy/plug
-    # During normal execution, startup the periodic article fetch from actual TTRSS
-    # server configuration
-    additional_children =
-      case args do
-        [env: :test] ->
-          [{Plug.Cowboy, scheme: :http, plug: TTRSS.MockServer, options: [port: 8081]}]
-
-        [_] ->
-          [{Util.UnreadArticleFetch, [interval: @default_interval, accounts: accounts]}]
-      end
-
-    children = children ++ additional_children
     Logger.info("Starting main application #{__MODULE__}")
     Logger.debug("Supervised children: #{inspect(children)}")
     opts = [strategy: :one_for_one, name: __MODULE__]
