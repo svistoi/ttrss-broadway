@@ -24,7 +24,6 @@ defmodule TtrssBroadway.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.7.0"},
-      # ffmpex uses older version
       {:jason, "~> 1.2"},
       {:temp, "~> 0.4.7"},
       {:ffmpex, "~> 0.7.3"},
