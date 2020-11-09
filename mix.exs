@@ -16,7 +16,7 @@ defmodule TtrssBroadway.MixProject do
   def application do
     [
       extra_applications: [:logger, :inets, :ssl, :telemetry, :httpoison],
-      mod: {MainApplication, [env: Mix.env()]}
+      mod: {MainApplication, []}
     ]
   end
 
@@ -25,7 +25,7 @@ defmodule TtrssBroadway.MixProject do
     [
       {:httpoison, "~> 1.7.0"},
       # ffmpex uses older version
-      {:jason, "~> 1.2", override: true},
+      {:jason, "~> 1.2"},
       {:temp, "~> 0.4.7"},
       {:ffmpex, "~> 0.7.3"},
       {:broadway, "~> 0.6.2"},

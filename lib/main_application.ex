@@ -6,7 +6,7 @@ defmodule MainApplication do
 
   @default_interval 60_000
 
-  def start(_type, args) do
+  def start(_type, _args) do
     config_yaml = load_configuration("config.yaml")
     Logger.debug("Using configuration: #{inspect(config_yaml)}")
 
