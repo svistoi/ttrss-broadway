@@ -47,8 +47,8 @@ defmodule Util.DownloadTranscode do
   def download_httpc(url, path) do
     Logger.info("Downloading #{url} to #{path}")
 
-    case :httpc.request(:get, {to_char_list(url), []}, [],
-           stream: to_char_list(path),
+    case :httpc.request(:get, {to_charlist(url), []}, [],
+           stream: to_charlist(path),
            autoredirect: true,
            relaxed: true
          ) do

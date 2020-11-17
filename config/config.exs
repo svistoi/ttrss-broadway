@@ -3,6 +3,8 @@ use Mix.Config
 config :ssl, protocol_version: :"tlsv1.2"
 
 config :ttrss_broadway,
+  http_client: HTTPoison,
+  ttrss_client: TTRSS.HTTPClient,
   audio_download_transcode_concurrency: 2
 
 config :logger,

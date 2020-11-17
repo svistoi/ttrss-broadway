@@ -72,7 +72,7 @@ defmodule Broadway.DownloadPipeline do
     {:ok, transcode_temp_path} = Temp.path(%{suffix: ".opus"})
 
     try do
-      {:ok, _} = DownloadTranscode.download_httpc(batch_info.batch_key, download_temp_path)
+      {:ok, _} = DownloadTranscode.download_http_poison(batch_info.batch_key, download_temp_path)
       :ok = DownloadTranscode.transcode_to_opus(download_temp_path, transcode_temp_path)
 
       messages

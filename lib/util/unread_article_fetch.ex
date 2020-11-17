@@ -17,7 +17,6 @@ defmodule Util.UnreadArticleFetch do
     """
     use Supervisor
 
-    @impl true
     def start_link(init_args) do
       Supervisor.start_link(__MODULE__, init_args, name: __MODULE__)
     end
@@ -68,7 +67,7 @@ defmodule Util.UnreadArticleFetch do
 
       account =
         if is_nil(account.sid) do
-          authenticated_account = Account.login(account)
+          Account.login(account)
         else
           account
         end

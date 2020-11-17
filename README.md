@@ -6,7 +6,7 @@
   - [Reference Elixir GenStage/Broadway](#reference-elixir-genstagebroadway)
   - [Reference TT-RSS](#reference-tt-rss)
 
-# Introduction
+# Introduction and
 
 This is a learning project to examine development with Elixir,
 [GenStage](https://hexdocs.pm/gen_stage/GenStage.html),
@@ -54,7 +54,6 @@ _build/prod/rel/ttrss_broadway/bin/ttrss_broadway start
 - profile
 - examine telemetry feature of broadway
 - live-reload
-- config.exs with more options
 
 ## Issue with HTTPoison and hackney
 
