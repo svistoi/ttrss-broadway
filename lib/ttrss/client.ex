@@ -1,7 +1,7 @@
 defmodule TTRSS.Client do
   @moduledoc false
 
-  @client Application.get_env(:ttrss_broadway, :ttrss_client, TTRSS.HTTPClient)
+  @client Application.compile_env(:ttrss_broadway, :ttrss_client, TTRSS.HTTPClient)
 
   defdelegate login(api_url, user, pass), to: @client
   defdelegate get_all_unread_articles(api_url, sid), to: @client
