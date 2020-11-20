@@ -5,7 +5,7 @@ defmodule TtrssBroadway.MixProject do
     [
       app: :ttrss_broadway,
       version: "0.4.0",
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env())
