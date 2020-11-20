@@ -30,7 +30,7 @@ jobs:
     - name: Check formatting
       run: mix format --check-formatted
     - name: Credo tests
-      run: mix credo -C ci
+      run: mix credo ci
     - name: Unit tests
       run: mix test
 
