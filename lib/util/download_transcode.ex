@@ -23,8 +23,7 @@ defmodule Util.DownloadTranscode do
         stream_to: self(),
         follow_redirect: true,
         max_redirect: 20,
-        recv_timeout: 1_000,
-        ssl: [{:versions, [:"tlsv1.3", :"tlsv1.2"]}]
+        recv_timeout: 1_000
       ]
 
       {:ok, resp = %HTTPoison.AsyncResponse{id: ref}} = HTTPoison.get(url, headers, options)
