@@ -35,7 +35,7 @@ defmodule TtrssBroadway.MixProject do
       {:mox, "~> 1.0", only: :test},
       {:telemetry, "~> 0.4.2"},
       {:temp, "~> 0.4.7"},
-      {:yaml_elixir, "~> 2.5.0"},
+      {:yaml_elixir, "~> 2.6.0"},
     ]
   end
 
