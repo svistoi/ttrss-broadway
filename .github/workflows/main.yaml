@@ -10,11 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Elixir
-      uses: actions/setup-elixir@v1
+    - uses: erlef/setup-elixir@v1
       with:
-        elixir-version: '1.11.2'
-        otp-version: '23.1'
+        elixir-version: '1.11.4'
+        otp-version: '23.2.7'
     - name: Restore dependencies cache
       uses: actions/cache@v2
       with:
@@ -33,4 +32,3 @@ jobs:
       run: mix credo ci
     - name: Unit tests
       run: mix test
-
