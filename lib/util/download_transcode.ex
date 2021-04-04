@@ -2,17 +2,22 @@ defmodule Util.DownloadTranscode do
   @moduledoc """
   Utilities for downloading and transcoding using ffmpeg
   """
-  import FFmpex
   use FFmpex.Options
+
+  import FFmpex
+
+  alias __MODULE__
+
   require Logger
 
-  def download_http_poison(url, path) do
-    Logger.info("Downloading #{url} to #{path} #{inspect(self())}")
+  @spec download(url :: String.t(), out_path :: Path.t()) :: {:ok, Path.t()}
+  def download(url, out_path) do
+    Logger.info("Downloading #{url} to #{out_path} #{inspect(self())}")
     # Download timeout 1 hour
     timeout = 3_600_000
 
     do_download = fn ->
-      {:ok, file} = File.open(path, [:write])
+      {:ok, file} = File.open(out_path, [:write])
 
       headers = [
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0"
@@ -34,11 +39,8 @@ defmodule Util.DownloadTranscode do
     end
 
     case do_download |> Task.async() |> Task.await(timeout) do
-      {:redirect, to} ->
-        download_http_poison(to, path)
-
-      other ->
-        other
+      {:redirect, to} -> download(to, out_path)
+      other -> other
     end
   end
 
@@ -138,47 +140,83 @@ defmodule Util.DownloadTranscode do
     |> add_stream_option(compression_level)
     |> add_stream_option(vbr)
     |> execute()
+    |> case do
+      :ok -> {:ok, out_path}
+      {:error, reason} -> {:error, reason}
+    end
   end
 
-  def sanitize_string_for_filename(input) do
-    input
-    # erase
-    |> String.replace(~r([!:\\/?+#%\(\)\"|]), "", global: true)
-    # replace with _
-    |> String.replace(~r(['\s]+), "_", global: true)
+  @spec checksum!(Path.t(), atom) :: String.t()
+  def checksum!(file_path, checksum_algo \\ :md5) do
+    file_path
+    |> File.stream!([], 2048)
+    |> Enum.reduce(:crypto.hash_init(checksum_algo), fn(chunk, acc) -> :crypto.hash_update(acc, chunk) end)
+    |> :crypto.hash_final()
+    |> Base.encode16()
   end
 
-  @spec date_to_str(Date.t()) :: String.t()
-  def date_to_str(updated) do
-    year = Integer.to_string(updated.year)
-    month = Integer.to_string(updated.month)
-    month = String.pad_leading(month, 2, "0")
-    day = Integer.to_string(updated.day)
-    day = String.pad_leading(day, 2, "0")
-    "#{year}#{month}#{day}"
+  #Util.get_remote_file(:"test@pinebook", "/home/svistoi/phone/my_reading/ansible.pdf", "/tmp/ansible.pdf")
+  @spec send_file(Path.t(), pid, non_neg_integer) :: {:ok, checksum :: String.t()}
+  def send_file(file_path, pid, chunk_size \\ 8194, checksum_algo \\ :md5) do
+    checksum =
+      file_path
+      |> File.stream!([], chunk_size)
+      |> Enum.reduce(:crypto.hash_init(checksum_algo), fn chunk, acc ->
+        {:chunk, chunk} = send pid, {:chunk, chunk}
+        :crypto.hash_update(acc, chunk)
+      end)
+      |> :crypto.hash_final()
+      |> Base.encode16()
+
+    {:eof, _} = send pid, {:eof, checksum}
+
+    {:ok, checksum}
   end
 
-  @spec title_to_filename(String.t(), Date.t()) :: <<_::48, _::_*8>>
-  def title_to_filename(title, updated) do
-    title =
-      title
-      |> sanitize_string_for_filename()
-      # 200 chars max
-      |> String.slice(0, 200)
+  @spec get_remote_file(String.t(), Path.t(), Path.t()) :: {:ok, Path.t()} | {:error, :timeout | term}
+  def get_remote_file(remote_node, remote_path, local_path) do
+    receiver_pid = self()
+    send_task = Task.async(fn -> :rpc.call(remote_node, Util.DownloadTranscode, :send_file, [remote_path, receiver_pid]) end)
+    {:ok, expected_checksum} = Task.await(send_task)
 
-    "#{date_to_str(updated)}_#{title}.opus"
+    {:ok, calculated_checksum} = receive_file(local_path)
+    if expected_checksum != calculated_checksum do
+      {:error, :transmission_error}
+    else
+      {:ok, local_path}
+    end
   end
 
-  @spec construct_output_file_path(map, String.t()) :: binary
-  def construct_output_file_path(article, out_root) do
-    article_date =
-      case DateTime.from_unix(article["updated"]) do
-        {:ok, t} -> t
-        _ -> ~D[1970-01-01]
-      end
+  @spec receive_file(Path.t(), atom) :: {:ok, checksum :: String.t()} | {:error, :timeout | term}
+  defp receive_file(file_path, checksum_algo \\ :md5) do
+    {:ok, file} = File.open(file_path, [:write])
+    try do
+      Stream.repeatedly(&receive_generator/0)
+      |> Enum.reduce_while(:crypto.hash_init(checksum_algo), fn message, acc ->
+        case message do
+          {:chunk, chunk} ->
+            :ok = IO.binwrite(file, chunk)
+            {:cont, :crypto.hash_update(acc, chunk)}
 
-    feed_folder_name = sanitize_string_for_filename(article["feed_title"])
-    podcast_file_name = title_to_filename(article["title"], article_date)
-    Path.join([out_root, feed_folder_name, podcast_file_name])
+          {:eof, _expected_checksum} ->
+            calculated_checksum = acc |> :crypto.hash_final() |> Base.encode16()
+            {:halt, {:ok, calculated_checksum}}
+
+          {:error, reason} ->
+            {:halt, {:error, reason}}
+        end
+      end)
+    after
+      File.close(file)
+    end
+  end
+
+  defp receive_generator do
+    receive do
+      {:chunk, chunk} -> {:chunk, chunk}
+      {:eof, checksum} -> {:eof, checksum}
+    after
+      10_000 -> {:error, :timeout}
+    end
   end
 end

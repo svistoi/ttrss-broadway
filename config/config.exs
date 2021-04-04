@@ -2,8 +2,7 @@ use Mix.Config
 
 config :ttrss_broadway,
   http_client: HTTPoison,
-  ttrss_client: TTRSS.HTTPClient,
-  audio_download_transcode_concurrency: 2
+  ttrss_client: TTRSS.HTTPClient
 
 config :logger,
   backends: [:console],

@@ -4,7 +4,7 @@ defmodule TtrssBroadway.MixProject do
   def project do
     [
       app: :ttrss_broadway,
-      version: "0.4.2",
+      version: "0.5.0",
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -18,24 +18,26 @@ defmodule TtrssBroadway.MixProject do
   def application do
     [
       extra_applications: [:logger, :inets, :ssl, :telemetry, :httpoison],
-      mod: {MainApplication, []}
+      mod: {TTRSSDownloader.Application, []}
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:broadway, "~> 0.6.2"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:excoveralls, "~> 0.10", only: :test},
       {:ffmpex, "~> 0.7.3"},
       {:httpoison, "~> 1.8.0"},
       {:jason, "~> 1.2"},
+      {:libcluster, "~> 3.2"},
       {:mox, "~> 1.0", only: :test},
       {:telemetry, "~> 0.4.2"},
       {:temp, "~> 0.4.7"},
-      {:yaml_elixir, "~> 2.6.0"}
+      {:timex, "~> 3.6"},
+      {:uuid, "~> 1.1" },
+      {:yaml_elixir, "~> 2.6.0"},
     ]
   end
 
