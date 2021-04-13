@@ -73,7 +73,7 @@ defmodule TTRSSDownloader.PeriodicMainDownloader do
       |> get_unread_article_messages()
       |> Stream.filter(&Article.has_audio_attachment?/1)
       |> Stream.reject(&file_already_exists?/1)
-      |> Task.async_stream(&Worker.download_transcode/1, ordered: false, timeout: 600_000)
+      |> Task.async_stream(&Worker.download_transcode/1, ordered: false, timeout: 600_000, max_concurrency: 100)
       |> Stream.filter(fn {status, _value} -> status == :ok end)
       |> Stream.map(fn {_status, value} -> value end)
       |> Stream.map(&copy_to_destination/1)
@@ -111,8 +111,8 @@ defmodule TTRSSDownloader.PeriodicMainDownloader do
       article
     end
 
-    defp mark_read(%Article{article: article}) do
-      TTRSS.Client.mark_article_read(article, article.account.api_url, article.account.sid)
+    defp mark_read(%Article{article: article, account: account}) do
+      TTRSS.Client.mark_article_read(article, account.api_url, account.sid)
     end
 
     defp maybe_login(%Account{sid: sid} = account) when is_nil(sid), do: Account.login(account)

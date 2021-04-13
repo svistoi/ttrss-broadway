@@ -8,13 +8,14 @@ defmodule TTRSSDownloader.Worker do
 
   @group "download_worker"
 
-  # client
   def start_link() do
     GenServer.start_link(__MODULE__, [])
   end
 
   def download_transcode(%Article{} = article, timeout \\ 3_600_000) do
     workers = :pg2.get_members(@group)
+
+    # TODO: This needs better node picker
 
     workers
     |> List.wrap()
@@ -34,7 +35,6 @@ defmodule TTRSSDownloader.Worker do
     :pg2.get_members group_name
   end
 
-  # server
   @impl true
   def init([]) do
     Temp.track!()
