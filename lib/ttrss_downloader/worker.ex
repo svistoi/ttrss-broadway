@@ -13,6 +13,7 @@ defmodule TTRSSDownloader.Worker do
   end
 
   def download_transcode(%Article{} = article, timeout \\ 3_600_000) do
+    Logger.info("Downloading #{Article.construct_output_file_path(article)}")
     workers = :pg2.get_members(@group)
 
     # TODO: This needs better node picker
@@ -24,11 +25,10 @@ defmodule TTRSSDownloader.Worker do
     |> GenServer.call({:download_transcode, article}, timeout)
   end
 
-  def test() do
-    workers = :pg2.get_members(@group)
-
-    workers
-    |> Enum.sort_by(fn worker -> Process.info(worker, :messages) end)
+  def num_workers() do
+    @group
+    |> :pg2.get_members()
+    |> length()
   end
 
   def check(group_name \\ :workers) do
