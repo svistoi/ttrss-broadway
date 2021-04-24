@@ -13,7 +13,6 @@ defmodule TTRSSDownloader.Worker do
   end
 
   def download_transcode(%Article{} = article, timeout \\ 3_600_000) do
-    Logger.info("Downloading #{Article.construct_output_file_path(article)}")
     workers = :pg2.get_members(@group)
 
     # TODO: This needs better node picker
@@ -48,11 +47,17 @@ defmodule TTRSSDownloader.Worker do
     download_path = Temp.path!()
     opus_path = Temp.path!(%{prefix: UUID.uuid4(), suffix: ".opus"})
 
-    with download_url when not is_nil(download_url) <- Article.get_audio_attachment_url(article),
-      {:ok, _} <- DownloadTranscode.download(download_url, download_path),
-      {:ok, _} <- DownloadTranscode.transcode_to_opus(download_path, opus_path),
-      :ok <- File.rm(download_path) do
-      {:reply, Article.set_download_path(article, opus_path), nil}
-    end
+    result =
+      with {:url_found, download_url} when not is_nil(download_url) <- {:url_found, Article.get_audio_attachment_url(article)},
+        {:ok, _} <- DownloadTranscode.download(download_url, download_path),
+        {:ok, _} <- DownloadTranscode.transcode_to_opus(download_path, opus_path),
+        :ok <- File.rm(download_path) do
+        {:ok, Article.set_download_path(article, opus_path)}
+      else
+        {:url_found, nil} -> {:error, :download_url_not_found}
+        error -> {:error, error}
+      end
+
+    {:reply, result, nil}
   end
 end

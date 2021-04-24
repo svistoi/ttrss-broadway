@@ -13,6 +13,6 @@ in pkgs.mkShell {
   buildInputs = [
     erlang.rebar3
     elixir
-    ffmpeg
+    pkgs.ffmpeg
   ];
 }

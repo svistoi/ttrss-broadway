@@ -6,8 +6,6 @@ defmodule Util.DownloadTranscode do
 
   import FFmpex
 
-  alias __MODULE__
-
   require Logger
 
   @spec download(url :: String.t(), out_path :: Path.t()) :: {:ok, Path.t()}
@@ -31,8 +29,11 @@ defmodule Util.DownloadTranscode do
         recv_timeout: 1_000
       ]
 
-      {:ok, resp = %HTTPoison.AsyncResponse{id: ref}} = HTTPoison.get(url, headers, options)
-      result = receive_data_loop(ref, resp, file)
+      result =
+      case HTTPoison.get(url, headers, options) do
+        {:ok, resp = %HTTPoison.AsyncResponse{id: ref}} -> receive_data_loop(ref, resp, file)
+        {:error, reason} -> {:error, reason}
+      end
 
       :ok = File.close(file)
       result
@@ -68,7 +69,7 @@ defmodule Util.DownloadTranscode do
   defp receive_data_loop(ref, resp, file) do
     receive do
       %HTTPoison.AsyncStatus{id: ^ref, code: code} ->
-        Logger.info("AsyncStatus received #{code} #{inspect(self())}")
+        Logger.debug("AsyncStatus received #{code} #{inspect(self())}")
         HTTPoison.stream_next(resp)
 
         case code do
@@ -83,11 +84,11 @@ defmodule Util.DownloadTranscode do
         end
 
       %HTTPoison.AsyncRedirect{id: ^ref, to: to} ->
-        Logger.info("Handling Redirect #{inspect(self())}")
+        Logger.debug("Handling Redirect #{inspect(self())}")
         {:redirect, to}
 
       %HTTPoison.AsyncHeaders{id: ^ref, headers: headers} ->
-        Logger.info("Headers received #{inspect(headers)} #{inspect(self())}")
+        Logger.debug("Headers received #{inspect(headers)} #{inspect(self())}")
         HTTPoison.stream_next(resp)
         receive_data_loop(ref, resp, file)
 
@@ -98,11 +99,11 @@ defmodule Util.DownloadTranscode do
         receive_data_loop(ref, resp, file)
 
       %HTTPoison.AsyncEnd{id: ^ref} ->
-        Logger.info("Finished downloading #{inspect(self())}")
+        Logger.debug("Finished downloading #{inspect(self())}")
         {:ok, nil}
 
       %HTTPoison.Error{id: ^ref, reason: reason} ->
-        Logger.info("Error #{inspect(reason)}")
+        Logger.error("Error #{inspect(reason)}")
         {:error, "Receiving a response chunk timed out"}
 
       other ->

@@ -74,9 +74,9 @@ defmodule TTRSSDownloader.PeriodicMainDownloader do
       |> Stream.filter(&Article.has_audio_attachment?/1)
       |> Stream.reject(&file_already_exists?/1)
       # TODO this needs to be a pool using distributed workers because a single timeout will cancel the other jobs
-      |> Task.async_stream(&Worker.download_transcode/1, ordered: false, timeout: 600_000, max_concurrency: Worker.num_workers())
-      |> Stream.filter(fn {status, _value} -> status == :ok end)
-      |> Stream.map(fn {_status, value} -> value end)
+      |> Task.async_stream(&Worker.download_transcode/1, ordered: false, timeout: 3_600_000, max_concurrency: Worker.num_workers())
+      |> Stream.filter(fn {stream_status, {worker_status, _value}} -> stream_status == :ok and worker_status == :ok end)
+      |> Stream.map(fn {_stream_status, {_worker_status, value}} -> value end)
       |> Stream.map(&copy_to_destination/1)
       |> Enum.map(&mark_read/1)
 

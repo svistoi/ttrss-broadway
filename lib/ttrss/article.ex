@@ -57,7 +57,7 @@ defmodule TTRSS.Article do
     |> Map.get("content_url", nil)
   end
 
-  @spec construct_output_file_path(Article.t()) :: binary
+  @spec construct_output_file_path(Article.t()) :: Path.t()
   def construct_output_file_path(%Article{article: article, account: account}) do
     timestamp =
       case DateTime.from_unix(article["updated"]) do
