@@ -13,7 +13,7 @@ defmodule TTRSSDownloader.Worker do
   end
 
   def download_transcode(%Article{} = article, timeout \\ 3_600_000) do
-    workers = :pg2.get_members(@group)
+    workers = :pg.get_members(@group)
 
     # TODO: This needs better node picker
 
@@ -26,19 +26,18 @@ defmodule TTRSSDownloader.Worker do
 
   def num_workers() do
     @group
-    |> :pg2.get_members()
+    |> :pg.get_members()
     |> length()
   end
 
   def check(group_name \\ :workers) do
-    :pg2.get_members group_name
+    :pg.get_members(group_name)
   end
 
   @impl true
   def init([]) do
     Temp.track!()
-    :ok = :pg2.create(@group)
-    :ok = :pg2.join(@group, self())
+    :ok = :pg.join(@group, self())
     {:ok, nil}
   end
 

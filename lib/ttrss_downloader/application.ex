@@ -10,9 +10,8 @@ defmodule TTRSSDownloader.Application do
   @default_interval 60_000
 
   def start(_type, _args) do
-    :ok = :pg2.create("download_worker")
-
     children = [
+      pg(),
       libcluster(),
       Broadway.ArticleHistory,
       {DynamicSupervisor, strategy: :one_for_one, name: TTRSSDownloader.DynamicSupervisor}
@@ -23,10 +22,15 @@ defmodule TTRSSDownloader.Application do
     Supervisor.start_link(children, opts)
   end
 
+  defp pg do
+    %{
+      id: :pg,
+      start: {:pg, :start_link, []}
+    }
+  end
+
   defp libcluster do
-    topologies = [
-      ttrss: [strategy: Cluster.Strategy.Gossip]
-    ]
+    topologies = Application.get_env(:libcluster, :topologies)
     {Cluster.Supervisor, [topologies, [name: ClusterSupervisor]]}
   end
 
